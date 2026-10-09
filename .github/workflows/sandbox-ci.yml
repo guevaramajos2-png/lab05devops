@@ -1,0 +1,73 @@
+# =============================================================================
+# CI del SANDBOX — corre sin credenciales cloud
+# =============================================================================
+# Ejercita fmt / init / validate / plan sobre sandbox/, que usa solo providers
+# locales. Permite practicar el flujo del módulo sin cuenta AWS y da un check
+# verde desde el primer push.
+# =============================================================================
+name: Sandbox CI
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'sandbox/**'
+      - '.github/workflows/sandbox-ci.yml'
+  pull_request:
+    paths:
+      - 'sandbox/**'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  TF_VERSION: '1.9.8'
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sandbox
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform fmt
+        id: fmt
+        run: terraform fmt -check -recursive
+        continue-on-error: true
+
+      - run: terraform init -input=false
+
+      - name: Terraform validate
+        id: validate
+        run: terraform validate -no-color
+
+      - name: Terraform plan
+        id: plan
+        run: terraform plan -input=false -no-color
+
+      - name: Comentar resultado en el PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = `#### Sandbox (providers locales)
+            | Paso | Resultado |
+            |------|-----------|
+            | fmt | \`${{ steps.fmt.outcome }}\` |
+            | validate | \`${{ steps.validate.outcome }}\` |
+            | plan | \`${{ steps.plan.outcome }}\` |
+
+            *Sin credenciales cloud.*`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });

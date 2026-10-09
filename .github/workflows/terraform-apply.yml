@@ -1,0 +1,62 @@
+# =============================================================================
+# STARTER — Lab 2: apply con aprobación humana (INCOMPLETO a propósito)
+# =============================================================================
+# Completa los TODO. La solución está en SOLUCION/.github/workflows/terraform-apply.yml
+#
+# Requisito previo: crear el environment 'production' en
+# Settings -> Environments y añadirle required reviewers.
+# =============================================================================
+name: Terraform Apply (starter)
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'infra/**'
+      - 'modules/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  TF_VERSION: '1.9.8'
+  AWS_REGION: us-east-1
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra
+    steps:
+      - uses: actions/checkout@v4
+      # TODO (Fase 2): OIDC con el rol de SOLO LECTURA (tf-plan-m5)
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+      - run: terraform init -input=false
+      - run: terraform plan -input=false -no-color -out=tfplan
+      # TODO (Fase 3): sube 'infra/tfplan' como artefacto para que el job de
+      # apply aplique EXACTAMENTE este plan y no genere uno nuevo.
+
+  apply:
+    needs: plan
+    runs-on: ubuntu-latest
+    # TODO (Fase 3): añade 'environment: production' — este es el gate humano
+    # que detiene el job hasta que un reviewer apruebe.
+    defaults:
+      run:
+        working-directory: infra
+    steps:
+      - uses: actions/checkout@v4
+      # TODO (Fase 2): OIDC con el rol de ESCRITURA (tf-apply-m5), distinto del
+      # de plan. Su trust policy solo acepta refs/heads/main.
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+      - run: terraform init -input=false
+      # TODO (Fase 3): descarga el artefacto tfplan y aplica ESE plan:
+      #   terraform apply -input=false tfplan
+      # (NO uses 'terraform apply -auto-approve' generando un plan nuevo)

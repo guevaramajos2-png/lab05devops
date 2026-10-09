@@ -1,0 +1,40 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "LeerEstadoRemoto",
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket",
+        "s3:GetObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::ORG-tfstate-m5",
+        "arn:aws:s3:::ORG-tfstate-m5/*"
+      ]
+    },
+    {
+      "Sid": "LockDynamoDB",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:DeleteItem"
+      ],
+      "Resource": "arn:aws:dynamodb:*:*:table/terraform-locks-m5"
+    },
+    {
+      "Sid": "LeerRecursosGestionados",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetBucket*",
+        "s3:ListAllMyBuckets",
+        "s3:GetLifecycleConfiguration",
+        "s3:GetEncryptionConfiguration",
+        "s3:GetAccelerateConfiguration",
+        "s3:GetReplicationConfiguration"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

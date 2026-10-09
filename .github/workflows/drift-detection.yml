@@ -1,0 +1,48 @@
+# =============================================================================
+# STARTER — Lab 3: detección de drift (INCOMPLETO a propósito)
+# =============================================================================
+# Completa los TODO. La solución está en SOLUCION/.github/workflows/drift-detection.yml
+# =============================================================================
+name: Drift Detection (starter)
+
+on:
+  # TODO (Fase 1): añade un 'schedule' con cron diario
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  # TODO (Fase 2): añade 'issues: write' para poder abrir el issue
+  id-token: write
+
+env:
+  TF_VERSION: '1.9.8'
+  AWS_REGION: us-east-1
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra
+    steps:
+      - uses: actions/checkout@v4
+
+      # TODO (Fase 1): autenticar con OIDC (rol de solo lectura basta)
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - run: terraform init -input=false
+
+      - name: Plan con detailed-exitcode
+        id: plan
+        run: |
+          # TODO (Fase 1): usa -detailed-exitcode y captura el codigo de salida.
+          #   0 = sin cambios | 2 = drift | 1 = error
+          #   Pista: 'set +e', pipe a tee, y luego ${PIPESTATUS[0]}
+          terraform plan -input=false -no-color
+
+      # TODO (Fase 2): si el exitcode es 2, abre un issue con el detalle usando
+      # actions/github-script@v7. Evita duplicar si ya hay uno abierto con la
+      # etiqueta 'drift'.

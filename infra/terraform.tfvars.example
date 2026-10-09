@@ -1,0 +1,4 @@
+# Copia a terraform.tfvars y ajusta. NO commitees terraform.tfvars si lleva datos sensibles.
+bucket_name = "mi-org-artifacts-m5-12345"
+environment = "produccion"
+aws_region  = "us-east-1"
